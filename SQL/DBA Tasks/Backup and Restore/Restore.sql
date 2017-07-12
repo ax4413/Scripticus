@@ -1,0 +1,1 @@
+restore headeronly from disk = 'y:\20141002_RS.BAK'
