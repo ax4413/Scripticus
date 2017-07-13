@@ -1,0 +1,1 @@
+if($DebugPreference -ne 'SilentlyContinue'){ $pscmdlet.MyInvocation.BoundParameters | format-Table -AutoSize }
