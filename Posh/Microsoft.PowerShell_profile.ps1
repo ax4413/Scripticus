@@ -1,44 +1,36 @@
-﻿# Makes our command prompt look pretty
+﻿# Set the location where we should look for our script files
+$PoshScriptsDir = join-path $env:USERPROFILE '.\Documents\WindowsPowerShell\Scripts'
+
+
+
+
+# Usefull console functions    #################################################
+# Makes our command prompt look pretty
 function Prompt() {
   write-host $(get-location) -ForegroundColor Green
   "PS>"
 }
 
+# kind of alias new-item
 function touch($path){
   new-item -path $path -type File
 }
 
-function Clear-SpecFlowCache(){
-  Remove-Item $env:TEMP\specflow*.cache
-}
-
-function Invoke-PowerShell {
-  powershell -nologo
-  Invoke-PowerShell
-}
-
-function Restart-PowerShell {
-    if ($host.Name -eq 'ConsoleHost') {
-        exit
-    }
-    Write-Warning 'Only usable while in the PowerShell console host'
-}
 
 
 
-
-# load scripts from teh script dir
-$PoshScriptsDir = join-path $env:USERPROFILE '.\Documents\WindowsPowerShell\Scripts'
+# load scripts    ##############################################################
 # load all scripts ## Get-ChildItem "${PoshScriptsDir}\*.ps1" | % {.$_} 
-# load some scripts
-$scripts = @('downloader/Get-Download.ps1', 'Clear-SpecFlowCache')
+$scripts = @('downloader/Get-Download.ps1'
+           , 'Clear-SpecFlowCache.ps1'
+           , 'Web-Functions.ps1'
+           , 'Restart-Powershell.ps1')
 $scripts | % { . $(Join-Path $PoshScriptsDir $_) } 
 
 
 
 
-
-# Chocolatey profile
+# load the Chocolatey profile    ###############################################
 $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 if (Test-Path($ChocolateyProfile)) {
   Import-Module "$ChocolateyProfile"
@@ -47,14 +39,7 @@ if (Test-Path($ChocolateyProfile)) {
 
 
 
-# alias functions
-Set-Alias -Name 'reload' -Value 'Restart-PowerShell'
-
-
-
-
-# LEAVE THIS AT THE END OF TEH PROFILE #
-##    IT IS USED BY THE RELOAD CALL   ##
+# THIS NEEDS TO STAY AT THEN END OF TEH PROFILE, IT IS USED BY THE RELOAD FUNC #
 $parentProcessId = (Get-WmiObject Win32_Process -Filter "ProcessId=$PID").ParentProcessId
 $parentProcessName = (Get-WmiObject Win32_Process -Filter "ProcessId=$parentProcessId").ProcessName
 
