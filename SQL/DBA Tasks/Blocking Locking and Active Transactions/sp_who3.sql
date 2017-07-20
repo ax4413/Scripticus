@@ -4,19 +4,19 @@ RETURNS TABLE
 AS
 RETURN
 (
-  SELECT  spid            = spid,
-          Status          = status,
-          Login           = convert(sysname, rtrim(loginame)),
-          HostName        = COALESCE(hostname, '-'),
-          DbName          = COALESCE(DB_NAME(dbid), '-'),
-          BlockedBy       = CASE WHEN blocked <> 0 THEN CAST(blocked AS VARCHAR(10)) ELSE '-' END,
+  SELECT  spid          = spid,
+          name			= COALESCE(DB_NAME(dbid), '-'),
+		  status         = status,
+          login          = convert(sysname, rtrim(loginame)),
+          host_name      = COALESCE(hostname, '-'),          
+          blocked_by     = CASE WHEN blocked <> 0 THEN CAST(blocked AS VARCHAR(10)) ELSE '-' END,
           cmd,
-          CpuTime         = cpu,
-          DiskIO          = physical_io,
-          LastBatch       = last_batch,
-          ProgramName     = program_name,
-          RequestId       = request_id,
-          SID             = sid
+          cpu_time       = cpu,
+          disk_io        = physical_io,
+          last_batch     = last_batch,
+          program_name   = program_name,
+          request_id      = request_id,
+          sid            = sid
   FROM    sys.sysprocesses with (nolock)
 )
 GO
