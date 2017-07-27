@@ -4,9 +4,9 @@ RETURNS TABLE
 AS
 RETURN
 (
-  SELECT  spid          = spid,
-          name			= COALESCE(DB_NAME(dbid), '-'),
-		  status         = status,
+  SELECT  spid           = spid,
+          name			     = COALESCE(DB_NAME(dbid), '-'),
+		      status         = status,
           login          = convert(sysname, rtrim(loginame)),
           host_name      = COALESCE(hostname, '-'),          
           blocked_by     = CASE WHEN blocked <> 0 THEN CAST(blocked AS VARCHAR(10)) ELSE '-' END,
@@ -15,7 +15,7 @@ RETURN
           disk_io        = physical_io,
           last_batch     = last_batch,
           program_name   = program_name,
-          request_id      = request_id,
+          request_id     = request_id,
           sid            = sid
   FROM    sys.sysprocesses with (nolock)
 )
