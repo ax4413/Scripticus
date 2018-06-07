@@ -1,0 +1,8 @@
+in notepad++ use the folllowing to modify your packages config
+
+<package id="(?<Package>.*)" version.*
+update-package $+{Package} -reinstall
+
+
+<package id="(?<Package>.*)" version="(?<version>.*)" targetFramework=.*
+install-package $+{Package} -version $+{version}

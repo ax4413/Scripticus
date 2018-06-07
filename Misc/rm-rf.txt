@@ -1,0 +1,7 @@
+psexec -i -s cmd.exe
+
+%folder%=f:\temp
+
+takeown /r /f %folder%
+cacls %folder% /c /G "ADMINNAME":F /T
+rd /s %folder%

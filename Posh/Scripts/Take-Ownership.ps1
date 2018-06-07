@@ -60,6 +60,7 @@ function Take-FullControl {
     $error.clear() 
 } 
 
+
 function Recursivley-TakeFullControl { 
     param( [string]$Path, [String]$domain, [String]$user, [switch]$takeOwnership ) 
 
@@ -86,18 +87,68 @@ function Recursivley-TakeFullControl {
 }
 
 
+function Fix-FileSystem
+{
+    [CmdletBinding(DefaultParameterSetName='Parameter Set 1', 
+                  SupportsShouldProcess=$true, 
+                  PositionalBinding=$false,
+                  HelpUri = 'http://www.microsoft.com/',
+                  ConfirmImpact='Medium')]
+    [Alias()]
+    [OutputType([String])]
+    Param
+    (
+        [Parameter(Mandatory=$true, 
+                   ValueFromPipeline=$true,
+                   ValueFromPipelineByPropertyName=$true, 
+                   ValueFromRemainingArguments=$false, 
+                   Position=0,
+                   ParameterSetName='Parameter Set 1')]
+        [ValidateNotNullOrEmpty()]
+        $path,
+
+        # Param2 help description
+        [Parameter(ParameterSetName='Parameter Set 1')]
+        [AllowNull()]
+        [AllowEmptyCollection()]
+        [AllowEmptyString()]
+        [ValidateScript({$true})]
+        [ValidateSet("Administrators", "Everyone")]
+        $mode
+    )
+
+    Begin
+    {
+    }
+    Process
+    {
+        if ($pscmdlet.ShouldProcess("Target", "Operation"))
+        {
+            if($mode -eq "Administrators"){
+                $domain = "BUILTIN"
+                $User   = "Everyone"
+            } 
+            
+            if($mode -eq "Everyone"){
+                $domain = ""
+                $User   = "Everyone"
+            }
+
+	        $logs     =  Join-Path "D:\Logs" "file_system_permissions_$(get-date -format 'yyyyMMddHHmmss')_.log" 
+
+	        Start-Transcript -Path $logs 
+	        Recursivley-TakeFullControl -Path $path -domain $domain -user $User -takeOwnership
+	        Stop-Transcript
+	        write-host "`r`nA full transcript can be found here $logs"
+        }
+    }
+    End
+    {
+    }
+}
 
 
 # ##############################################################################################
 
-$RootPath = "F:\Icenet.IdentityServer"  
-$domain   = "BUILTIN"                  # "NT AUTHORITY"
-$User     = "Administrators"           # "SYSTEM"  
-
-$logs     =  Join-Path ".\Logs" "file_system_permissions_$(get-date -format 'yyyyMMddHHmmss')_.log" 
-
-
-Start-Transcript -Path $logs 
-Recursivley-TakeFullControl -Path $RootPath -domain $domain -user $User -takeOwnership
-Stop-Transcript
-write-host "`r`nA full transcript can be found here $logs"
+# $RootPath = "F:\VAN\SYTrunk\Rescheduling Service\Service"  
+# Fix-FileSystem -path $RootPath -mode Administrators

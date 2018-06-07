@@ -202,3 +202,106 @@ FROM    msdb.dbo.sysjobs j
                 ON j.job_id = h.job_id 
 WHERE   j.name like '%IceNet3 - ODS Incremental Load%'
 ORDER BY j.name, run_date, run_time desc
+
+
+
+
+
+
+
+
+---------------------------------------------------------------------------------------------
+-- SQL Agent Job Schedules ------------------------------------------------------------------
+
+-- JOB SCHEDULES 
+select  job_name             = j.name	
+      , job_enabled          = j.enabled
+      , schedule_name        = s.name
+      ,	schedule_enabled     = s.enabled	
+      , freq_type            = case s.freq_type when 1   then 'One time only'
+                                                when 4   then 'Daily'
+                                                when 8   then 'Weekly'
+                                                when 16  then 'Monthly'
+                                                when 32  then 'Monthly, relative to freq_interval'
+                                                when 64  then 'Runs when the SQL Server Agent service starts'
+                                                when 128 then 'Runs when the computer is idle' end
+      , freq_subday_type     = case s.freq_subday_type when 1 then 'At the specified time'
+                                                       when 2 then 'Seconds'
+                                                       when 4 then 'Minutes'
+                                                       when 8 then 'Hours' end 
+      , freq_interval        = case s.freq_type when 1   then 'n/a'
+                                                when 4   then 'Every ' + cast(s.freq_interval as varchar(5)) + ' days'
+                                                when 8   then case s.freq_interval when 1  then 'Sunday'
+                                                                                   when 2  then 'Monday'
+                                                                                   when 4  then 'Tuesday'
+                                                                                   when 8  then 'Wednesday'
+                                                                                   when 16 then 'Thursday'
+                                                                                   when 32 then 'Friday'
+                                                                                   when 64 then 'Saturday' end 									 
+                                                when 16  then 'On the ' + cast(s.freq_interval as varchar(5)) + ' of the month'
+                                                when 32  then case s.freq_interval when 1  then 'Sunday'
+                                                                                   when 2  then 'Monday'
+                                                                                   when 3  then 'Tuesday'
+                                                                                   when 4  then 'Wednesday'
+                                                                                   when 5  then 'Thursday'
+                                                                                   when 6  then 'Friday'
+                                                                                   when 7  then 'Saturday' 
+                                                                                   when 8  then 'Day'
+                                                                                   when 9  then 'Weekday'
+                                                                                   when 10 then 'Weekend day' end
+                                                when 64  then 'n/a'
+                                                when 128 then 'n/a' end
+      , freq_subday_interval = case s.freq_subday_type when 1 then 'At the specified time'
+                                                       when 2 then 'Every ' +cast(s.freq_subday_interval as varchar(5)) + ' Seconds'
+                                                       when 4 then 'Every ' +cast(s.freq_subday_interval as varchar(5)) + ' Minutes'
+                                                       when 8 then 'Every ' +cast(s.freq_subday_interval as varchar(5)) + ' Hours' end	  
+      , active_start_date    = cast(cast(s.active_start_date as varchar(10)) as date)
+      , active_start_time    = SUBSTRING(RIGHT('000000'+CAST(s.active_start_time AS VARCHAR(6)),6), 1, 2) + ':' +
+                               SUBSTRING(RIGHT('000000'+CAST(s.active_start_time AS VARCHAR(6)),6), 3, 2) + ':' +
+                               SUBSTRING(RIGHT('000000'+CAST(s.active_start_time AS VARCHAR(6)),6), 5, 2) 
+
+      , active_end_date      = cast(cast(s.active_end_date as varchar(10)) as date)
+      , active_end_time      = SUBSTRING(RIGHT('000000'+CAST(s.active_end_time AS VARCHAR(6)),6), 1, 2) + ':' +
+                               SUBSTRING(RIGHT('000000'+CAST(s.active_end_time AS VARCHAR(6)),6), 3, 2) + ':' +
+                               SUBSTRING(RIGHT('000000'+CAST(s.active_end_time AS VARCHAR(6)),6), 5, 2) 
+      , s.date_created
+      , s.date_modified
+      , s.freq_recurrence_factor
+      , s.schedule_id
+      , s.schedule_uid
+      , s.originating_server_id
+      , s.owner_sid
+from	msdb.dbo.sysschedules S
+        INNER JOIN msdb.dbo.sysjobschedules js on js.schedule_id = s.schedule_id
+        INNER JOIN msdb.dbo.sysjobs j ON j.job_id = js.job_id
+order by 3
+
+
+
+
+
+
+---------------------------------------------------------------------------------------------
+-- SQL To disable / stop jobs ---------------------------------------------------------------
+SELECT  j.name
+      , j.enabled
+      , s.enabled
+      , [stop job sql]         = 'sp_stop_job @job_id = ''' + cast(j.job_id as varchar(100)) +''''
+      , [disable job sql]      = case j.enabled when 1 then 'EXEC msdb.dbo.sp_update_job @job_id = ''' + cast(j.job_id as varchar(100))+ ''', @enabled = 0' else '' end
+      , [disable schedule sql] = case s.enabled when 1 then 'EXEC msdb.dbo.sp_update_schedule @schedule_id = ''' + cast(s.schedule_id as varchar(100))+ ''', @enabled = 0' else '' end
+FROM	msdb.dbo.sysschedules s
+        INNER JOIN msdb.dbo.sysjobschedules js on js.schedule_id = s.schedule_id
+        INNER JOIN msdb.dbo.sysjobs j ON j.job_id = js.job_id
+WHERE	j.name NOT LIKE 'asp%' AND 
+        j.name NOT LIKE 'cdw%' AND 
+        j.name NOT LIKE 'backup%' AND 
+        j.name NOT LIKE 'cdc.%' AND 
+        j.name NOT LIKE 'ssis%' AND   
+        j.name NOT IN ('CommandLog Cleanup'
+                     , 'DatabaseIntegrityCheck - SYSTEM_DATABASES'
+                     , 'DatabaseIntegrityCheck - USER_DATABASES'
+                     , 'IceNet2 - Nominal Ledger Execute All'
+                     , 'IndexOptimize - USER_DATABASES'
+                     , 'Output File Cleanup' ) 
+      
+      
