@@ -85,7 +85,9 @@ function Get-Download
 
             # download the file
             $output = Join-Path $DownloadFolder $name
-            Invoke-WebRequest -Uri $uri -OutFile $output
+            # bits transfers are quicker
+            Start-BitsTransfer -Source $uri -Destination $output
+            #Invoke-WebRequest -Uri $uri -OutFile $output
             return $output
         }
     }

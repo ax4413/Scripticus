@@ -1,0 +1,6 @@
+
+-- parse remote desktop files to get a list of machine names
+
+$x = gc .\bt.rdg | Select-String -Pattern '<name>(?<machine>.+)<\/name>'
+$x.matches.groups | ? { $_.name -eq 'machine'} | select Value
+

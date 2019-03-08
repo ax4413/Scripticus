@@ -19,39 +19,41 @@ db.getCollection('LogEntityV1')
 
   
   
-// Use a js date object.
-// This is automatically cast to a UTC representation
-var d1 = new Date("February 05, 2018 10:00:00");
-var d2 = new Date("February 05, 2018 11:00:00");
+// Use a js date object. (cast the local date to a UTC date)
+var utcStartTime = new Date(new Date('November 05, 2018 11:00:00').toISOString());
+var utcEndTime   = new Date(new Date("November 05, 2018 11:30:00").toISOString());
 
 db.getCollection('LogEntityV1').find( {
     $and : [
-        { "CreatedDateTime" : { $gte : d1 } }
-      , { "CreatedDateTime" : { $lt  : d2 } }
-	  //, {"_id" : "e002d735-8865-426d-9d79-c13eaac106c2"}
-      //, { "LogCategory" : 1 } // Audit = 1, Warning = 2, History = 3, Error = 4
+        { "CreatedDateTime" : { $gt  : utcStartTime } }
+      , { "CreatedDateTime" : { $lte : utcEndTime } }
+      , { "LogCategory" : 1 } // Audit = 1, Warning = 2, History = 3, Error = 4
       //, { "ExceptionMessage" : /.*Failure calling SatisfyCheckistCondition*/ }
+      //, {"_id" : "e002d735-8865-426d-9d79-c13eaac106c2"}
     ]}
     // projection
     , { "_id" : 0 ,
         "CreatedDateTime" : 1,
+        "SourceMachine":1,
         "LogCategory":1,
         "Message":1,
         "MessageExtended":1,
-        "ExceptionMessage":1        
-    }
+        "ExceptionMessage":1,
+        "StackTrace":1 
+    }  
 ).sort({CreatedDateTime : -1 })
 
 
 
 
 // Group by date and count instances ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-var d1 = new Date("January 01, 2016 00:00:00");
-var d2 = new Date("January 02, 2017 00:00:00");
+
+var utcStartTime = new Date(new Date('November 01, 2018 11:00:00').toISOString());
+var utcEndTime   = new Date(new Date("November 31, 2018 11:30:00").toISOString());
 
 db.getCollection('LogEntityV1').aggregate( [
-    { $match: { $and : [ { "CreatedDateTime" : { $gte : d1 } }
-                       , { "CreatedDateTime" : { $lt  : d2 } } ] } } ,
+    { $match: { $and : [ { "CreatedDateTime" : { $gte : utcStartTime } }
+                       , { "CreatedDateTime" : { $lt  : utcEndTime } } ] } } ,
     { "$group": { "_id": {  "year":       { "$year":       "$CreatedDateTime" } ,
                             "month":      { "$month":      "$CreatedDateTime" } ,
                             "dayOfMonth": { "$dayOfMonth": "$CreatedDateTime" } } ,
