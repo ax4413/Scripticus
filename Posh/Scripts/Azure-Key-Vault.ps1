@@ -201,8 +201,8 @@ function Update-KeyVaultSecrets
 
 #cls
 
-$kv  = 'KVICECLOUDNP'
-$key = 'itvanagentp*'
+$kv  = 'KVICECLOUDET'
+$key = 'etgcbsit2*'
 
 Write-Host "syeadon@icecloudnp.onmicrosoft.com"
 

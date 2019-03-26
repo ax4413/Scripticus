@@ -4,11 +4,11 @@ if(-not($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Admi
   exit
 }
 
+
 if($host.name -match 'ISE'){
   Write-Host "Error: This script cant be run from inside Powershell  ISE." -ForegroundColor red -BackgroundColor Black
   exit
 }
-
 
 
 if(-not(get-command choco -ErrorAction SilentlyContinue)){
@@ -17,13 +17,28 @@ if(-not(get-command choco -ErrorAction SilentlyContinue)){
   Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 }
 
+
+### terminals ########################
+choco install terminus
+#choco install cmder
+
+
+### utilities #########################
 choco install baregrep
 choco install baretail
-#choco install cmder
 choco install ditto
 choco install echoargs
-choco install graphviz
+
+
+### dev tools ##########################
+choco install git
+choco install vscode
+choco install visualstudio2017community
 choco install linqpad5
 choco install NugetPackageExplorer
-choco install plantuml
-choco install terminus
+
+
+
+# choco install graphviz
+# choco install plantuml
+

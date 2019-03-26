@@ -66,3 +66,24 @@ function Set-FilePermissions
   }
 }
 
+function fman($leftDir, $rightDir){
+	$workingDirectory = pwd | select -ExpandProperty path
+	
+	if(!$leftDir){
+		$leftDir = $workingDirectory
+	}
+	
+	if(!$rightDir){
+		$rightDir = $workingDirectory
+	}
+	
+	if(-not(Test-Path $leftDir -pathtype Container)){
+		write-error "The left directory '$leftDir' is not valid"
+	}
+	
+	if(-not(Test-Path $rightDir -pathtype Container)){
+		write-error "The right directory '$rightDir' is not valid"
+	}
+	
+	& C:\Users\syeadon\AppData\Local\fman\fman.exe "$leftDir" "$rightDir"
+}
