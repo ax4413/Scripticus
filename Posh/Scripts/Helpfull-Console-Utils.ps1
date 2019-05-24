@@ -2,8 +2,12 @@
 
 # Makes our command prompt look pretty
 function Prompt() {
-  write-host $(get-location) -ForegroundColor Green
-  "PS>"
+  if(Get-GitStatus){ 
+    & $GitPromptScriptBlock 
+  } else {
+    write-host $(get-location) -ForegroundColor Green
+    "PS>"
+  }
 }
 
 

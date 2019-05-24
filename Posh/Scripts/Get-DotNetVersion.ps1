@@ -41,4 +41,4 @@ function Get-DotNetFrameworkVersion {
 cls
 Get-DotNetFrameworkVersion | fl
 
-Get-DotNetFrameworkVersion 'npsql01', 'npsql02', 'npsql03', 'npsql04', 'npsql05' | fl
+#Get-DotNetFrameworkVersion 'npsql01', 'npsql02', 'npsql03', 'npsql04', 'npsql05' | fl

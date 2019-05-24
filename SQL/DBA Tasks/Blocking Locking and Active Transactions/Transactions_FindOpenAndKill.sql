@@ -17,27 +17,35 @@ ORDER BY DB_NAME(dbid)
 
 
 
--- ==== Search for active transactions
+
+-- == Search for active transactions
+-- https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-sysprocesses-transact-sql?view=sql-server-2017
+-- https://docs.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-tran-session-transactions-transact-sql?view=sql-server-2017
+-- https://docs.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-exec-connections-transact-sql?view=sql-server-2017
+-- https://docs.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-exec-sql-text-transact-sql?view=sql-server-2017
+
 SELECT  sp.spid,
         ec.most_recent_session_id,
+        tst.transaction_id,
+        sp.hostprocess,
+        sp.program_name,
         sp.hostname,
         sp.loginame,
+        sp.login_time,
         sp.last_batch,
-        [Database]                  =   DB_NAME(sp.dbid),
-        [BatchTime dd:hh:mi:ss:mmm] =   RIGHT( '00' + CONVERT( VARCHAR(20), DATEDIFF( hh, 0, GETDATE() - sp.last_batch ) / 24 ), 2 ) + ':' +
-                                        RIGHT( '00' + CONVERT( VARCHAR(20), DATEDIFF(hh,0,GETDATE()-sp.last_batch) % 24 ), 2) + ':' +
-                                        SUBSTRING( CONVERT( VARCHAR(20), GETDATE() - sp.last_batch, 114 ), CHARINDEX( ':', CONVERT( VARCHAR(20), GETDATE() - sp.last_batch, 114 ) ) + 1, LEN( CONVERT( VARCHAR(20), GETDATE() - sp.last_batch, 114 ) ) ),
-        cast(sqlt.text as xml) CmdText,
+        [database]                   =   DB_NAME(sp.dbid),
+        [batch_time dd:hh:mi:ss:mmm] =   RIGHT( '00' + CONVERT( VARCHAR(20), DATEDIFF( hh, 0, GETDATE() - sp.last_batch ) / 24 ), 2 ) + ':' +
+                                         RIGHT( '00' + CONVERT( VARCHAR(20), DATEDIFF( hh, 0, GETDATE() -sp.last_batch) % 24 ), 2) + ':' +
+                                         SUBSTRING( CONVERT( VARCHAR(20), GETDATE() - sp.last_batch, 114 ), 
+                                                    CHARINDEX( ':', CONVERT( VARCHAR(20), GETDATE() - sp.last_batch, 114 ) ) + 1, 
+                                                               LEN( CONVERT( VARCHAR(20), GETDATE() - sp.last_batch, 114 ) ) ),
+        sqlt.text cmd_text,
         sp.cmd,
-        sp.status,
-        tst.transaction_id,
+        sp.status,        
         ec.last_read,
         ec.num_reads,
         ec.last_write,
-        ec.num_writes,
-        sp.hostprocess,
-        sp.program_name,
-        sp.login_time
+        ec.num_writes        
 FROM    sys.sysprocesses sp
         LEFT OUTER JOIN sys.dm_tran_session_transactions tst
                 ON tst.session_id = sp.spid
