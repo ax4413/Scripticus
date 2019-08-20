@@ -80,7 +80,7 @@ SELECT  [Database Name]     = DB_NAME(tds.Database_id),
 FROM    sys.dm_tran_active_transactions tas
         INNER JOIN sys.dm_tran_database_transactions tds
                 ON (tas.transaction_id = tds.transaction_id )
-
+ORDER BY DB_NAME(tds.Database_id)
 
 
 
@@ -108,7 +108,8 @@ INSERT INTO #Who2
 
 SELECT  *
 FROM    #Who2 w
-WHERE   DBNAME = '' ;
+WHERE   DBNAME LIKE 'it247qa1%' 
+ORDER BY DBName;
 
 
 

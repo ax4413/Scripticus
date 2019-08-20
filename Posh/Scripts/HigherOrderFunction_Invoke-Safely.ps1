@@ -48,3 +48,48 @@ if($x){
 } else {
     write-host "x returned null"
 }
+
+
+
+
+################################################################################################
+
+
+
+
+function Procede-If
+{
+    Param
+    (
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)]
+        $obj,
+
+        [Parameter(Mandatory=$true, Position=1)]
+        [ScriptBlock]$Predicate,
+
+        [Parameter(Mandatory=$false, Position=1)]
+        [ValidateSet("Continue", "Warn", "Fail")]
+        $ActionPrefernce = "Continue"
+    )
+
+    Process
+    {
+        $state = & $Predicate $obj
+
+        if($state -eq $true)
+        {
+            if($ActionPrefernce -eq 'Fail'){
+                Write-Error 'boom'
+            } 
+            if($ActionPrefernce -eq 'Warn'){
+                Write-Warning 'foo'
+            } 
+            if($ActionPrefernce -eq 'Continue'){
+                $obj
+            }
+        }
+    }    
+}
+
+
+2 | Procede-If -Predicate { $_ -eq 2 } | % { $_ * $_ }

@@ -1,21 +1,45 @@
-﻿
+﻿function Get-KeyVaultSecret
+{
+    Param
+    (
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)]
+        $Vault, 
+        [Parameter(Mandatory=$true, Position=1)]        
+        $Key, 
+        [Parameter(Mandatory=$true, Position=2)]        
+        [switch]$IncludeVersions
+    )
 
-function Get-KeyVaultSecret($keyVault, $KeyName, [switch]$IncludeVersions){
-    Get-AzureKeyVaultSecret -VaultName $KeyVault | ? Name -Like $KeyName | Sort-Object Name | ForEach-Object {  
-        $secret = (Get-AzureKeyVaultSecret -VaultName $KeyVault -Name $_.Name).SecretValueText       
-        $hash   = ConvertTo-Base64Sha256($secret)
+    $items = Get-AzureKeyVaultSecret -VaultName $Vault | 
+             Where-Object Name -Like $Key | 
+             Sort-Object Name 
+    
+    $result = @()
 
-        $obj = New-Object -TypeName PSObject
-        $obj | Add-Member –MemberType NoteProperty –Name Name –Value $_.Name
-        $obj | Add-Member –MemberType NoteProperty –Name Secret –Value $secret
-        $obj | Add-Member –MemberType NoteProperty –Name Hash –Value $hash
-        $obj | Add-Member –MemberType NoteProperty –Name Enabled –Value $_.Enabled
-        $obj | Add-Member –MemberType NoteProperty –Name Created –Value $_.Created
-        $obj | Add-Member –MemberType NoteProperty –Name Updated –Value $_.Updated
+    foreach($item in $items){
+        $history = Get-AzureKeyVaultSecret -VaultName $Vault -Name $item.Name -IncludeVersions:$IncludeVersions | Sort -Descending Created
 
-        return $obj
+        $obj = New-Object -TypeName PSObject |
+               Add-Member –MemberType NoteProperty –Name Name    –Value $item.Name -PassThru |
+               Add-Member –MemberType NoteProperty –Name Enabled –Value $item.Enabled -PassThru |
+               Add-Member –MemberType NoteProperty –Name Created –Value $item.Created -PassThru |
+               Add-Member –MemberType NoteProperty –Name Secret  –Value @() -PassThru
+
+        foreach($item in $history){
+            $secret = (Get-AzureKeyVaultSecret -VaultName $Vault -Name $item.Name -Version $item.Version).SecretValueText
+            $hash   = ConvertTo-Base64Sha256($secret)
+
+            $obj.Secret += New-Object -TypeName PSObject |
+                           Add-Member –MemberType NoteProperty –Name Secret  –Value $secret -PassThru |
+                           Add-Member –MemberType NoteProperty –Name Hash    –Value $hash -PassThru |
+                           Add-Member –MemberType NoteProperty –Name Created –Value $item.Created -PassThru
+        }
+                
+        $result +=$obj
     }
+    return $result
 }
+
 
 function ConvertTo-Base64Sha256($value){
     $enc   = [system.Text.Encoding]::UTF8
@@ -27,6 +51,7 @@ function ConvertTo-Base64Sha256($value){
 
     return [System.Convert]::ToBase64String($hash);
 }
+
 
 Function New-Password {
   Param(
@@ -139,6 +164,7 @@ Function New-Password {
   return $chars -join ''
 }
 
+
 function Update-KeyVaultSecrets
 {
     [CmdletBinding()]
@@ -192,18 +218,69 @@ function Update-KeyVaultSecrets
 }
 
 
+function Update-KeyVaultSecret
+{
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Position=0, Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
+        $VaultName,
+
+        # key name accepts wild cards
+        [Parameter(Position=1, Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
+        $KeyName,
+
+        [Parameter(Position=2, Mandatory=$false)]
+        $NewPassword,
+
+        [switch]$TestMode
+    )
+    Process
+    {
+        $keys = @(Get-AzureKeyVaultSecret -VaultName $VaultName | Where-Object Name -Like $KeyName)
+
+        if($keys.Count -gt 1){ Write-Error "Too many keys found for $KeyName" }
+
+        $key = $keys[0]        
+            
+        write-host "Updating Key: $($key.Name)..." -ForegroundColor Yellow
+
+        if($NewPassword){
+            $password = $NewPassword
+        } else {
+            $password = New-Password -Length 30 -MinimumNumberOfNumbers 9 -NoSpecialCharacters 
+        }
+        
+        $secret = $password | ConvertTo-SecureString -AsPlainText -Force
+        
+        write-host "New Password: $password" -ForegroundColor Yellow
+
+        if(!$TestMode){
+            $null = Set-AzureKeyVaultSecret -VaultName $kv -Name $key.Name  -SecretValue $secret
+        }        
+
+        Write-Host "Key Updated" -ForegroundColor Green
+    }
+ 
+}
+
+function Reset-Credentials(){
+    $credential = $null
+}
+
+
 Write-Host "Initializing $($MyInvocation.MyCommand.Name)..."
 
 Import-Module AzureRM.profile | Out-Null
 
-$credentials = $null
-$userName    = 'syeadon@icecloudnp.onmicrosoft.com'
-
-if(!$credentials){ 
+if(!$credential){ 
   Write-Host 'Connecting...'
-  $credential = Get-Credential -UserName $userName -Message "Please provide the password for '$userName'"
+  $credential = Get-Credential -UserName 'syeadon@icecloudnp.onmicrosoft.com' -Message "Please provide the password for '$userName'"
   $x = Connect-AzureRmAccount -Credential $credential
-  if(!$x){ Write-Host 'Connected' -ForegroundColor Green }
+  if($x){ 
+    Write-Host 'Connected' -ForegroundColor Green 
+  } else {
+    Write-Host 'Failed to connect' -ForegroundColor Red
+  }
 }
-Write-Host 'Done'
 Write-Host ' '

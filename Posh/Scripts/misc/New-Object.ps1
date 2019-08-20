@@ -15,7 +15,7 @@ get-process s* | % { $properties = @{'ProcessName'=$_.ProcessName; 'Path'=$_.Pat
 
 
 # very shorthand way to create object
-gest-process s* | % { $object = New-Object –TypeName PSObject –Prop (@{'ProcessName'=$_.ProcessName; 'Path'=$_.Path})
+get-process s* | % { $object = New-Object –TypeName PSObject –Prop (@{'ProcessName'=$_.ProcessName; 'Path'=$_.Path})
                      Write-Host $object }
 
 
@@ -78,4 +78,14 @@ foreach($t in $templates) {
     $t | Add-Member -MemberType ScriptProperty -Name FullName -Value { (Get-ChildItem ([string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0}\{1}", $Root, $this.Application)) | select -First 1 -ExpandProperty FullName) }
     $t | Add-Member -MemberType ScriptProperty -Name DirectoryPath -Value { (Split-Path ($this.FullName)) }
     $t | Add-Member -MemberType ScriptProperty -Name FileName -Value { ([System.IO.Path]::GetFileName($this.FullName)) }
+}
+
+
+
+# new up an object the new and easy way PoSH v3++
+[PSCustomObject]@{
+   'Application'= 'ActivationProcessService';
+   'Environment'= 'QA'
+   'Client'     = 'VirginMedia'
+   'Instance'   = '505295-SSCLUQA'
 }
