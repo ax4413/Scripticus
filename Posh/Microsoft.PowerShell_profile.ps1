@@ -24,7 +24,8 @@ function touch($path){
 $scripts = @('downloader/Get-Download.ps1'
            , 'Clear-SpecFlowCache.ps1'
            , 'Web-Functions.ps1'
-           , 'Restart-Powershell.ps1')
+           , 'Restart-Powershell.ps1'
+		   , 'File-Access.ps1')
 $scripts | % { . $(Join-Path $PoshScriptsDir $_) } 
 
 

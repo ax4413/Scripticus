@@ -6,7 +6,7 @@
         $Vault, 
         [Parameter(Mandatory=$true, Position=1)]        
         $Key, 
-        [Parameter(Mandatory=$true, Position=2)]        
+        [Parameter(Mandatory=$false, Position=2)]        
         [switch]$IncludeVersions
     )
 

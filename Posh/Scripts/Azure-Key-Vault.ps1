@@ -5,10 +5,16 @@ $script = Join-Path $PSScriptRoot -ChildPath 'Azure-Key-Vault-Functions.ps1'
 $script = Join-Path $PSScriptRoot -ChildPath 'convertto-yaml.ps1'
 . $script
 
-$kv  = 'KVICECLOUDNP'
-$key = 'BTTSTAPT17-IDSCLIENT-icenet-api*'
+$kv  = 'KVICECLOUDPR'
+$key = 'PRBA-IDSClient*'
 
-Get-KeyVaultSecret -Vault $kv -Key  $key -IncludeVersions:$true | ConvertTo-yaml
+
+# Get-KeyVaultSecret -Vault $kv -Key $key -IncludeVersions:$true | ConvertTo-yaml
+
+Get-KeyVaultSecret -Vault $kv -Key $key `
+| Select-Object @{Name = 'KeyName'; Expression = {$_.Name} } -ExpandProperty Secret `
+| Sort-Object @{Expression = 'KeyName'; Descending = $true}, @{Expression = 'Created'; Descending = $true} `
+| Select-Object KeyName, Created, Secret
 
 
 # Get-AzureKeyVaultSecret -VaultName $kv | ? Name -Like $key | % { Undo-AzureKeyVaultSecretRemoval -VaultName $kv -Name $_.name }
