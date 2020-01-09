@@ -1,16 +1,4 @@
 
-
-# Makes our command prompt look pretty
-function Prompt() {
-  if(Get-GitStatus){ 
-    & $GitPromptScriptBlock 
-  } else {
-    write-host $(get-location) -ForegroundColor Green
-    "PS>"
-  }
-}
-
-
 # kind of alias new-item
 function touch($path){
   new-item -path $path -type File

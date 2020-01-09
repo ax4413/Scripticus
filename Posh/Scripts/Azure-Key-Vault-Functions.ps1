@@ -53,115 +53,29 @@ function ConvertTo-Base64Sha256($value){
 }
 
 
-Function New-Password {
-  Param(
-      [Parameter(Mandatory=$False)][Int] $Length = 16,
-      [Parameter(Mandatory=$False)][Int] $MinimumNumberOfNumbers = 3,
-      [Parameter(Mandatory=$False)][Int] $MaximumNumberOfNumbers,
-      [Parameter(Mandatory=$False)][Int] $MinimumNumberOfSpecialCharacters = 3,
-      [Parameter(Mandatory=$False)][Int] $MaximumNumberOfSpecialCharacters,
-      [Parameter(Mandatory=$False)][switch] $NoSpecialCharacters
-  )
+function New-Secret {
+	[CmdletBinding()]
+	param (
+		[int] $length = 10,
+		[int] $numberOfNonAlphanumericCharacters = 0
+	)
 
-  if(-not $MaximumNumberOfNumbers -and $MaximumNumberOfNumbers -lt 1){ 
-      $MaximumNumberOfNumbers = $MinimumNumberOfNumbers * 2 
-  }
+	begin {
+		$null = [Reflection.Assembly]::LoadWithPartialName("System.Web")
+	}
 
-  if(-not $MaximumNumberOfSpecialCharacters -and $MaximumNumberOfSpecialCharacters -lt 1){ 
-      $MaximumNumberOfSpecialCharacters = $minimumNumberOfSpecialCharacters * 2 
-  }
+	process {
+		Write-Verbose "Generating secret of length $length with minimum of $numberOfNonAlphanumericCharacters special characters"
+		return [system.web.security.membership]::GeneratePassword($length, $numberOfNonAlphanumericCharacters)
+	}
+}
 
-  $numbers      = @([char[]](48..57))
-  $uppercase    = @([char[]](65..90))
-  $lowercase    = @([char[]](97..122))
-  $illegalChars = @([char[]]([int][char]'^',[int][char]'|',[int][char]'$', [int][char]',', [int][char]'"', [int][char]'`', [int][char]'''', [int][char]'='))
-  $specialChars = @([char[]](33..126)) | ? {  $illegalChars -notcontains $_  -and $numbers -notcontains $_ -and $uppercase -notcontains $_ -and $lowercase -notcontains $_ }
-  
-  $specialCharCount = 0
-  $numberCount      = 0
-  $uppercaseCount   = 0
-  $lowercaseCount   = 0
-
-  $chars = @()
-  foreach($i in 1..$Length){
-      $random = Get-Random
-      $index  = 0
-      $char   = ''
-      $type   = ''
-      if($random % 9 -eq 0 -and $specialCharCount -le $MaximumNumberOfSpecialCharacters){
-          $type  = 'SP'
-          $index = (Get-Random -Minimum 0 -Maximum ($specialChars.Length - 1))
-          $char  = $specialChars[$index]          
-          $specialCharCount ++          
-      }
-      elseif($random % 6 -eq 0 -and $numberCount -le $MaximumNumberOfNumbers){
-          $type  = 'NB'
-          $index = (Get-Random -Minimum 0 -Maximum ($numbers.Length - 1))
-          $char  = $numbers[$index]
-          $numberCount ++
-      }
-      elseif($random % 2 -eq 0) {
-          $type  = 'UP'
-          $index = (Get-Random -Minimum 0 -Maximum ($uppercase.Length - 1))
-          $char  = $uppercase[$index]
-          $uppercaseCount ++
-      }
-      else {
-        $type  = 'LW'
-          $index = (Get-Random -Minimum 0 -Maximum ($lowercase.Length - 1))
-          $char  = $lowercase[$index]
-          $lowercaseCount ++
-      }
-
-      $chars += $char
-      Write-Debug "$type - '$i' = '$index' = '$char'"
-  }
-
-  while($specialCharCount -lt $MinimumNumberOfSpecialCharacters){
-      $replacementIndex = (Get-Random -Minimum 0 -Maximum ($specialChars.Length - 1))
-      $replacementChar  = $specialChars[$replacementIndex]
-      
-      $index = (Get-Random -Minimum 0 -Maximum ($chars.Length - 1))
-      $oldChar = $chars[$index]
-    
-      if($specialChars -contains $oldChar) { continue }
-      
-      Write-Debug "Replacing item '$index, $oldChar' with '$replacementChar'"
-
-      $chars[$index] = $replacementChar
-      $specialCharCount ++
-  }
-  
-  while($numberCount -lt $MinimumNumberOfNumbers){
-      $replacementIndex = (Get-Random -Minimum 0 -Maximum ($numbers.Length - 1))
-      $replacementChar  = $numbers[$replacementIndex]
-      
-      $index = (Get-Random -Minimum 0 -Maximum ($chars.Length - 1))
-      $oldChar = $chars[$index]
-
-      if($numbers -contains $oldChar) { continue }
-
-      Write-Debug "Replacing item '$index, $oldChar' with '$replacementChar'"
-
-      $chars[$index] = $replacementChar
-      $numberCount ++
-  }
-
-  if($NoSpecialCharacters){
-        Write-Debug "No special chars allowed"
-        $i = 0
-        $validChars = $lowercase + $numbers + $uppercase
-        while($i -le $chars.Length-1){
-            if($validChars -notcontains $chars[$i]){
-                $j = Get-Random -Minimum 0 -Maximum ($validChars.Length-1)
-                Write-Debug "Replacing item '$i, $($chars[$i])' with '$($validChars[$j])'"
-                $chars[$i] = $validChars[$j] 
-            }
-            $i++
-        }
-  }
-
-  return $chars -join ''
+function New-Password($Length) {
+	$str = ''
+	while ($str.Length -lt $Length) {
+		$str += (New-Secret -length 100 -numberOfNonAlphanumericCharacters 0) -replace '[^a-zA-Z0-9]', ''
+	}
+	return $str.SubString(0, $Length)
 }
 
 
@@ -193,23 +107,26 @@ function Update-KeyVaultSecrets
 
         $lastKey = ''
 
-        Write-Host "Processing $($keys.Count)..."
+        Write-Host "Updating secrets for $KeyName - $($keys.Count) keys found..."
 
-        $keys | 
-        Sort-Object Name |
-        ForEach-Object {
-            $tenant = $_.Name -replace 'APPUSER', '' -replace 'IWEBUSER', '' -replace 'PUBWEBUSER', '' -replace 'PVTWEBUSER' , '' -replace 'SRVCSUSER','' -replace 'SSIUSER','' -replace 'SSRUSER',''
-            if(!$lastKey.StartsWith($tenant)) { write-host " "}
+        $sortedKeys = $keys | Sort-Object Name
+
+        foreach($k in $sortedKeys) {
+            $tenant = Get-TenantNameFromKey -KeyName $k.Name
+            if(!$lastKey.StartsWith($tenant)) {
+                # purely formating if we are dealing with many tenants 
+                write-host " "
+            }
             
-            $password = New-Password -Length 30 -MinimumNumberOfNumbers 9 -NoSpecialCharacters 
+            $password = New-Password -Length 30
             $secret = $password | ConvertTo-SecureString -AsPlainText -Force
-            write-host ("Setting {0,-23} => {1}" -f $_.Name, $password) -ForegroundColor Yellow
+            write-host ("Setting {0,-23} => {1}" -f $k.Name, $password) -ForegroundColor Yellow
 
             if(!$TestMode){
-                $null = Set-AzureKeyVaultSecret -VaultName $kv -Name $_.Name  -SecretValue $secret
+                $null = Set-AzureKeyVaultSecret -VaultName $kv -Name $k.Name  -SecretValue $secret
             }
 
-            $lastKey = $_.Name
+            $lastKey = $k.Name
         }
 
         Write-Host "`r`nDone" -ForegroundColor Green
@@ -217,6 +134,18 @@ function Update-KeyVaultSecrets
  
 }
 
+function Get-TenantNameFromKey($KeyName){
+    $tenant = $KeyName
+    $tenant = $tenant -replace 'APPUSER', '' 
+    $tenant = $tenant -replace 'IWEBUSER', ''
+    $tenant = $tenant -replace 'PUBWEBUSER', ''
+    $tenant = $tenant -replace 'PVTWEBUSER' , ''
+    $tenant = $tenant -replace 'SRVCSUSER',''
+    $tenant = $tenant -replace 'SSIUSER',''
+    $tenant = $tenant -replace 'SSRUSER',''
+    $tenant = ($tenant -split '-')[0]
+    return $tenant
+}
 
 function Update-KeyVaultSecret
 {
@@ -248,7 +177,7 @@ function Update-KeyVaultSecret
         if($NewPassword){
             $password = $NewPassword
         } else {
-            $password = New-Password -Length 30 -MinimumNumberOfNumbers 9 -NoSpecialCharacters 
+            $password = New-Password -Length 30
         }
         
         $secret = $password | ConvertTo-SecureString -AsPlainText -Force

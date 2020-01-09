@@ -1,0 +1,28 @@
+# this will revert a commit --amend even when you have pushed 
+# your original commit to <your-remote-branch>
+# https://stackoverflow.com/questions/1459150/how-to-undo-git-commit-amend-done-instead-of-git-commit/1459264
+
+
+# get the last x local commits,  should contain your (amend)
+git reflog -5
+
+# reset to just before your (amend)
+git reset <SHA BEFORE THE AMMEND> --soft 
+
+# you will now see all the changes in the commit and the amend undone
+git status
+
+# save ALL the changes to the stash
+git stash
+
+# get the latest from the remote tracking branch
+git pull origin <your-remote-branch> --ff-only
+
+# if you want to see that you have the commit you didn't want to amend
+git log
+
+# retrieve our changes
+git stash pop
+
+# now you can create your new unamended commit
+git commit -m 

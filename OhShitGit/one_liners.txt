@@ -1,0 +1,13 @@
+// delete local branches where the remote has gone
+// use carefully this forcably deletes branches regardles or their merge status
+// https://stackoverflow.com/questions/7726949/remove-tracking-branches-no-longer-on-remote
+git fetch -p && git branch -vv | awk '/: gone]/{print $1}' | xargs git branch -D
+
+
+// Get a list of changed files between commits
+git diff --name-only old_sha new_sha
+git diff --name-only HEAD~10 HEAD~5
+git diff --name-only HEAD^ HEAD
+
+// show commits on THIS branch only (assumes current branch taken from develop)
+git log develop..

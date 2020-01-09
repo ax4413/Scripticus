@@ -2,9 +2,9 @@
 .Synopsis
    Find out what is holding on to a file
 .EXAMPLE
-   Get-Handle -fileName 'notepad.exe' `
+   Get-Handle 'notepad.exe' `
      | Select-Object -ExpandProperty PID `
-     | Invoke-Taskkill
+     | Invoke-KillTask
 #>
 function Get-Handle {
   Param(
@@ -24,11 +24,11 @@ function Get-Handle {
 .Synopsis
    kill a given process
 .EXAMPLE
-   Invoke-Taskkill -pid 1234
+   Invoke-KillTask -pid 1234
 .EXAMPLE
    Get-Handle -Resource 'notepad.exe' `
      | Select-Object -ExpandProperty PID `
-     | Invoke-Taskkill
+     | Invoke-KillTask
 #>
 function Invoke-KillTask{
   Param(
@@ -53,7 +53,7 @@ function Unlock-Resource {
     $Resource
   )
   
-  Get-Handle -fileName $Resource `
+  Get-Handle $Resource `
      | Select-Object -ExpandProperty PID `
-     | Invoke-Taskkill
+     | Invoke-KillTask
 }  

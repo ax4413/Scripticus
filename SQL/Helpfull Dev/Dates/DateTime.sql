@@ -19,6 +19,11 @@ SELECT  CONVERT( DATETIME, ISNULL( @DateString,'19000101'), 121), CONVERT( SMALL
 
 
 -- ==========================================================================================================================
+-- ==== CONVERT microseconds to HH:mm:ss:ms
+-- https://docs.microsoft.com/en-us/sql/t-sql/functions/cast-and-convert-transact-sql?view=sql-server-ver15
+DECLARE @seconds DECIMAL(5,2) = 121.25
+SELECT CONVERT(varchar, DATEADD(ms, @seconds * 1000, 0), 114)
+-- ==========================================================================================================================
 -- ==== CONVERT TO DATETIME FORM UN-TRUST WORTH STRINGS
 -- ==== Edit the curent DateFormating in SQLServer
 SET DATEFORMAT dmy /*22/05/2011*/
