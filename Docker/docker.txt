@@ -1,0 +1,52 @@
+docker info
+docker version
+
+-- list running containers and containers that have run
+docker ps
+docker ps -a
+docker ps | findstr 8Qz7eyQZ
+
+
+-- info about local images
+docker images
+
+
+-- start a container
+docker run image_foo
+
+-- start a named container and connect to it with PoSH. 
+-- pass powershell as a argument to the container
+docker run --name "awsome_steve" -it image_foo powershell
+
+-- connect to a running container
+docker exec -it image_foo powershell
+
+-- run and interactive named container with a internal volume C:\Tools\ pointing at d:/tools
+docker run --name "awsome_steve" -it -v d:/tools:C:\Tools image_foo
+
+-- reconnect to a container
+docker run -i evil_steve
+
+-- use this if the entry pointing is already set
+docker run --name "awsome_steve" --entrypoint=powershell -it image_foo
+
+
+-- get the latest image
+docker pull image_foo
+
+-- get the a specific version of the image
+docker pull image_foo:version_number
+
+
+-- remove a docker container
+docker rm container_name
+
+
+-- specific eqcs database example of above
+docker login -u syeadon -p sp6XGf-gDaTDkHnA7iXp eqcs-gitlab-registry.icehosted.com:443
+docker run --name "external_steve" --entrypoint=powershell -it -v mssqldata:C:\SqlServer\Data eqcs-gitlab-registry.icehosted.com:443/icenet-applications/icenet-database-external/icenet-database-external:latest
+docker run --name "external_steve" --entrypoint=powershell -it -v mssqldata:C:\SqlServer\Data eqcs-gitlab-registry.icehosted.com:443/icenet-applications/icenet-database-main/icenet-database-main:latest
+
+
+docker run --name "build_docker" -it eqcs-gitlab-registry.icehosted.com:443/icenet-tools/icenet-buildagent-with-docker/buildagent-with-docker:1.0.0-feature-latest-sdk.70
+docker run --name "builder" -it -v local:C:\Users\syeadon\Desktop\icenet-buildagent eqcs-gitlab-registry.icehosted.com:443/icenet-tools/icenet-buildagent/buildagent:1.0.0-feature-ice-23812.103

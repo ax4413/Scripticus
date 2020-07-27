@@ -1,0 +1,3 @@
+sqlcmd -S npsql01.icecloudnp.onmicrosoft.com\BT -U DockerUser -P system -Q "SELECT 1"
+
+	AGL-${Environment}${CustomerName}${UniqueIdentifier}${DomainNameFullyQualified},${AGLListenerPortValue}

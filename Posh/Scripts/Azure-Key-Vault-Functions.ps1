@@ -210,6 +210,8 @@ if(!$credential){
     Write-Host 'Connected' -ForegroundColor Green 
   } else {
     Write-Host 'Failed to connect' -ForegroundColor Red
+    Reset-Credentials
+    Exit
   }
 }
 Write-Host ' '

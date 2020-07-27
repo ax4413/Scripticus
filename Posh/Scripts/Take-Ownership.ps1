@@ -150,5 +150,5 @@ function Fix-FileSystem
 
 # ##############################################################################################
 
-# $RootPath = "F:\VAN\SYTrunk\Rescheduling Service\Service"  
-# Fix-FileSystem -path $RootPath -mode Administrators
+#$RootPath = "F:\Source\VAN\SY"  
+#Fix-FileSystem -path $RootPath -mode Everyone

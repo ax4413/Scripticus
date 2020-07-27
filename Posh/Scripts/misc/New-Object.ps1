@@ -8,21 +8,30 @@ get-process s* | % { $obj = New-Object -TypeName PSObject
                      Write-Host $obj  }
 
 
+## ######################################################################################################################
+
 # use a hash table to make a new object more succinct
 get-process s* | % { $properties = @{'ProcessName'=$_.ProcessName; 'Path'=$_.Path}
                      $object = New-Object –TypeName PSObject –Prop $properties
                      Write-Host $object }
 
 
+## ######################################################################################################################
+
 # very shorthand way to create object
 get-process s* | % { $object = New-Object –TypeName PSObject –Prop (@{'ProcessName'=$_.ProcessName; 'Path'=$_.Path})
                      Write-Host $object }
 
 
+## ######################################################################################################################
+
 # shorthand way to create new objects and add them to a array
-get-process s* | % { $objects=@() } { $objects += New-Object –TypeName PSObject –Prop ( @{ 'ProcessName'=$_.ProcessName; 'Path'=$_.Path } ) }
+get-process s* | % { $objects=@() } 
+                   { $objects += New-Object –TypeName PSObject –Prop ( @{ 'ProcessName'=$_.ProcessName; 'Path'=$_.Path } ) }
 $objects
 
+
+## ######################################################################################################################
 
 # add a script property to the new ps obj
 get-process s* | % { $obj = New-Object -TypeName PSObject
@@ -33,6 +42,8 @@ get-process s* | % { $obj = New-Object -TypeName PSObject
                             }
                      Write-Host $obj  }
 
+
+## ######################################################################################################################
 
 # add a script method to a object. if you call the method without a paramater you will be prompted for one.
 $proxy = New-Object -TypeName PSObject
@@ -51,16 +62,50 @@ $proxy | Add-Member -MemberType ScriptMethod -Name GetItemType -Value {
 $proxy.GetItemType('foo')
 
 
-function Property-Exists($obj, $property){
-    if ($obj.PSObject.Properties.Match($property).Count) {
-      $true
-    } else {
-      $false
-    }
-}
+## ######################################################################################################################
+
+$x = New-Object PSObject |
+	Add-Member -MemberType NoteProperty -Name RDCollectionName -Value "RemoteApps" -PassThru |
+	Add-Member -MemberType NoteProperty -Name DomainName -Value $DomainName -PassThru |
+	Add-Member -MemberType NoteProperty -Name RDCollectionDescription -Value "Remote Desktop Apps Collection" -PassThru |
+	Add-Member -MemberType NoteProperty -Name Tenant -Value $tenant -PassThru |
+	Add-Member -MemberType NoteProperty -Name FolderName -Value "${ClientName}${UniqueIdentifier}" -PassThru |
+	Add-Member -MemberType NoteProperty -Name RemoteDesktopAppDisplayName -Value $DisplayName -PassThru |
+	Add-Member -MemberType NoteProperty -Name RemoteDesktopAppExeFileDir -Value $RemoteDesktopAppExeFileDir -PassThru |
+	Add-Member -MemberType NoteProperty -Name RemoteDesktopAppExecutableFile -Value $ExecutableFile -PassThru |
+	Add-Member -MemberType NoteProperty -Name RemoteDesktopAppAlias -Value $RemoteDesktopAppAlias -PassThru |
+	Add-Member -MemberType ScriptProperty -Name UserGroups -Value {
+		if ($this.RemoteDesktopAppDisplayName -eq "Icenet 4 SmartClient") {
+			@("$($this.DomainName)\Domain Admins", "$($this.DomainName)\SG-RDS EQCS $($this.Tenant) Users")
+		}
+		else {
+			@("$($this.DomainName)\Domain Admins", "$($this.DomainName)\SG-RDS EQCS $($this.Tenant) Users", "$($this.DomainName)\SG-RDS Client $($this.Tenant) Users")
+		}
+	} -PassThru |
+	Add-Member -MemberType ScriptMethod -Name ToParams -Value {
+		param([string]$ConnectionBroker)
+		$params = @{
+			'ConnectionBroker' = $ConnectionBroker ;
+			'Alias'            = $this.RemoteDesktopAppAlias ;
+			'DisplayName'      = $this.RemoteDesktopAppDisplayName ;
+			'FilePath'         = $this.RemoteDesktopAppExecutableFile ;
+			'FolderName'       = $this.FolderName ;
+			'ShowInWebAccess'  = 1 ;
+			'CollectionName'   = $this.RDCollectionName ;
+			'IconPath'         = $this.RemoteDesktopAppExecutableFile ;
+		}
+
+		if ($this.UserGroups -and $this.UserGroups.Count -gt 0) {
+			$params.Add('UserGroups', $this.UserGroups)
+		}
+		return $params
+	} -PassThru
+
+$x.ToParams('blahblahblah')
 
 
-# NOTICE THAT I AM USING $THIS
+## ######################################################################################################################
+
 # A collection of of our templates and their meta data
 $templates=@()
 
@@ -81,11 +126,26 @@ foreach($t in $templates) {
 }
 
 
+## ######################################################################################################################
 
-# new up an object the new and easy way PoSH v3++
+function Property-Exists($obj, $property){
+    if ($obj.PSObject.Properties.Match($property).Count) {
+      $true
+    } else {
+      $false
+    }
+}
+
+
+## ######################################################################################################################
+
+# new up an object the new and easy way PoSH v3++ (these are note properties)
 [PSCustomObject]@{
    'Application'= 'ActivationProcessService';
    'Environment'= 'QA'
    'Client'     = 'VirginMedia'
    'Instance'   = '505295-SSCLUQA'
 }
+
+
+## ######################################################################################################################

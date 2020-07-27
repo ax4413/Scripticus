@@ -88,6 +88,16 @@ PRINT(@imageSQL)
 
 SELECT DISTINCT STUFF((SELECT ', ' + name FROM sys.columns FOR XML PATH('')),1,1,'') AS List FROM sys.tables
 
+
+-- GENARETE INSERT STATEMENTS
+SELECT  DISTINCT 'SELECT' + STUFF((SELECT ', ' + name FROM sys.columns c where c.object_id = t.object_id FOR XML PATH('')),1,1,'') + ' FROM dbo.' + t.name AS q 
+FROM    sys.tables t 
+WHERE   t.name in ( 
+  'TableName')
+and t.schema_id = schema_id('dbo')
+
+
+
 -- STUFF AS A CORRELATED SUB QUERY
 SELECT *
 FROM Patient px

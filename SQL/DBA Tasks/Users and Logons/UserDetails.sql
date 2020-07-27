@@ -35,4 +35,7 @@ GROUP BY sessions.login_name
 
 
 
-EXEC xp_logininfo 'ICENET\Irene.Hall','all';
+EXEC xp_logininfo 'ICECLOUDNP\SYEADON','all';
+
+
+DBCC USEROPTIONS

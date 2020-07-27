@@ -6,10 +6,10 @@ $script = Join-Path $PSScriptRoot -ChildPath 'convertto-yaml.ps1'
 . $script
 
 $kv  = 'KVICECLOUDNP'
-$key = 'ITVanAgentP-IDS*'
+$key = 'ITBAQA1-IDS*'
 
 
-#Get-KeyVaultSecret -Vault $kv -Key $key -IncludeVersions:$true | ConvertTo-yaml
+Get-KeyVaultSecret -Vault $kv -Key $key -IncludeVersions:$true | ConvertTo-yaml
 
 
 # Get-AzureKeyVaultSecret -VaultName $kv | ? Name -Like $key | % { Undo-AzureKeyVaultSecretRemoval -VaultName $kv -Name $_.name }
@@ -30,15 +30,15 @@ $key = 'ITVanAgentP-IDS*'
 
 
 
-# update multiple keys 
-Get-KeyVaultSecret -Vault $kv -Key $key `
-| Select-Object @{Name = 'KeyName'; Expression = {$_.Name} } -ExpandProperty Secret `
-| Sort-Object @{Expression = 'KeyName'; Descending = $true}, @{Expression = 'Created'; Descending = $true} `
-| Select-Object KeyName, Created, Secret
-
-Update-KeyVaultSecrets -VaultName $kv -KeyName $key
-
-Get-KeyVaultSecret -Vault $kv -Key $key `
-| Select-Object @{Name = 'KeyName'; Expression = {$_.Name} } -ExpandProperty Secret `
-| Sort-Object @{Expression = 'KeyName'; Descending = $true}, @{Expression = 'Created'; Descending = $true} `
-| Select-Object KeyName, Created, Secret
+## update multiple keys 
+#Get-KeyVaultSecret -Vault $kv -Key $key `
+#| Select-Object @{Name = 'KeyName'; Expression = {$_.Name} } -ExpandProperty Secret `
+#| Sort-Object @{Expression = 'KeyName'; Descending = $true}, @{Expression = 'Created'; Descending = $true} `
+#| Select-Object KeyName, Created, Secret
+#
+#Update-KeyVaultSecrets -VaultName $kv -KeyName $key
+#
+#Get-KeyVaultSecret -Vault $kv -Key $key `
+#| Select-Object @{Name = 'KeyName'; Expression = {$_.Name} } -ExpandProperty Secret `
+#| Sort-Object @{Expression = 'KeyName'; Descending = $true}, @{Expression = 'Created'; Descending = $true} `
+#| Select-Object KeyName, Created, Secret
