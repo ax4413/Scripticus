@@ -34,7 +34,7 @@ ORDER BY f.name, proj.name,pac.Name
 
 
 -- ===  Can be found above
-DECLARE @VersionId INT = 668
+DECLARE @VersionId INT = ?
 
 IF(@VersionId = 0 ) BEGIN
     RAISERROR ('
@@ -65,7 +65,7 @@ ORDER BY e.start_time DESC
 
 
 -- ===  Can be found above
-DECLARE @ExecutionId INT = 605095
+DECLARE @ExecutionId INT = ?
 
 IF(@ExecutionId = 0) BEGIN
     RAISERROR ('
@@ -103,7 +103,7 @@ SELECT  em.event_message_id
         --, em.*
 FROM    SSISDB.catalog.event_messages em
 WHERE   em.operation_id = @ExecutionId
-        AND em.event_name NOT LIKE '%Validate%'
+        --AND em.event_name NOT LIKE '%Validate%'
         --AND em.event_name = 'OnError'
         --AND em.event_name = 'OnInformation'
         --AND execution_path LIKE '%<some executable>%'

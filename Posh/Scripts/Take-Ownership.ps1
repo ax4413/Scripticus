@@ -46,7 +46,7 @@ function Take-FullControl {
     Write-Host "SUCCESS: Permisions set to Fullcontrol" -ForegroundColor Gray
 
     if($error -ne $null) { 
-        Write-Error "Take ownership /access operation failed for $itemPath" -foregroundcolor Red 
+        Write-Error "Take ownership /access operation failed for $itemPath"
     } else { 
         $Acl        = get-acl $itemPath
         $UserAccess = New-Object System.Security.Principal.NTAccount("$domain", "$User") 

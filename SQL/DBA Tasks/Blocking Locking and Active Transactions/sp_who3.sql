@@ -1,5 +1,6 @@
-
-CREATE FUNCTION sp_who3()
+USE master
+GO
+CREATE FUNCTION fn_who3()
 RETURNS TABLE
 AS
 RETURN
@@ -100,3 +101,7 @@ SET NOCOUNT ON;
 		   AND se.is_user_process = 1
 END
 GO
+
+
+
+sp_who3

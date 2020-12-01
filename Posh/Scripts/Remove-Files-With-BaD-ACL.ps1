@@ -37,4 +37,4 @@ function Remove-Directory($folder){
     Remove-Item -Recurse -Force $path
 }
 
-blitz 'F:\VAN\SYTrunk\Payment Service'
+blitz 'D:\Escrow\DepositB'
